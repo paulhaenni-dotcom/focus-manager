@@ -9,14 +9,79 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Configuration Firebase -->
+    <script src="firebase-config.js"></script>
 </head>
 <body>
+    <!-- Modal de connexion/inscription -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <div class="auth-header">
+                <h2 id="authTitle">🔐 Connexion</h2>
+                <p class="auth-subtitle">Synchronisez vos tâches sur tous vos appareils</p>
+            </div>
+            
+            <div id="authMessage" class="message hidden"></div>
+            
+            <form id="authForm" class="auth-form">
+                <div class="input-group">
+                    <label for="authEmail">Email</label>
+                    <input type="email" id="authEmail" placeholder="votre@email.com" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="authPassword">Mot de passe</label>
+                    <input type="password" id="authPassword" placeholder="••••••••" required minlength="6">
+                </div>
+                
+                <div class="auth-buttons">
+                    <button type="submit" id="authSubmitBtn" class="btn btn-primary">
+                        Se connecter
+                    </button>
+                    <button type="button" id="authToggleBtn" class="btn btn-secondary">
+                        Créer un compte
+                    </button>
+                </div>
+            </form>
+            
+            <div class="auth-footer">
+                <button id="offlineModeBtn" class="btn btn-small btn-secondary">
+                    💾 Continuer hors ligne
+                </button>
+            </div>
+        </div>
+    </div>
+
     <header>
-        <h1>FocusManager 🧠</h1>
-        <p class="subtitle">Votre assistant de productivité personnel</p>
+        <div class="header-content">
+            <div class="header-left">
+                <h1>FocusManager 🧠</h1>
+                <p class="subtitle">Votre assistant de productivité personnel</p>
+            </div>
+            <div class="header-right" id="userInfo" style="display: none;">
+                <div class="user-profile">
+                    <span id="userEmail" class="user-email"></span>
+                    <button id="logoutBtn" class="btn btn-small btn-secondary">
+                        🚪 Déconnexion
+                    </button>
+                </div>
+                <div class="sync-status">
+                    <span id="syncStatus" class="sync-indicator">
+                        <span class="sync-dot"></span>
+                        <span id="syncText">Synchronisé</span>
+                    </span>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main>
+    <main id="appContent" style="display: none;">
         <!-- Zone de messages -->
         <div id="message" class="message hidden"></div>
 
