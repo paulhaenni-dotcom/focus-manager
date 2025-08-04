@@ -1,8 +1,14 @@
 # 🧠 FocusManager - Gestionnaire de Productivité
 
-Une application web moderne de gestion de tâches avec timer Pomodoro pour optimiser votre productivité quotidienne.
+Une application web moderne de gestion de tâches avec timer Pomodoro et synchronisation cloud pour optimiser votre productivité sur tous vos appareils.
 
 ## ✨ Fonctionnalités
+
+### 🔐 Système de Compte
+- 📧 Authentification par email/mot de passe
+- ☁️ Synchronisation automatique sur tous vos appareils
+- 💾 Mode hors ligne disponible
+- 🔄 Sauvegarde en temps réel dans le cloud
 
 ### 📝 Gestion des Tâches
 - ➕ Ajout de tâches avec nom, date d'échéance et niveau de priorité
@@ -32,6 +38,58 @@ Une application web moderne de gestion de tâches avec timer Pomodoro pour optim
 - ♿ Accessibilité optimisée
 - 🎨 Interface épurée et intuitive
 
+## 🔧 Configuration Firebase (Obligatoire pour la synchronisation)
+
+### Étape 1 : Créer un projet Firebase
+
+1. **Allez sur [Firebase Console](https://console.firebase.google.com/)**
+2. **Cliquez sur "Créer un projet"**
+3. **Nommez votre projet** (ex: "focusmanager-[votre-nom]")
+4. **Activez Google Analytics** (optionnel)
+5. **Attendez la création du projet**
+
+### Étape 2 : Configurer l'authentification
+
+1. **Dans la console Firebase, allez dans "Authentication"**
+2. **Cliquez sur "Get started"**
+3. **Onglet "Sign-in method"**
+4. **Activez "Email/Password"**
+5. **Sauvegardez**
+
+### Étape 3 : Configurer Firestore Database
+
+1. **Allez dans "Firestore Database"**
+2. **Cliquez sur "Create database"**
+3. **Choisissez "Start in test mode"** puis "Next"
+4. **Sélectionnez une région** proche de vous
+5. **Cliquez "Done"**
+
+### Étape 4 : Obtenir la configuration Web
+
+1. **Dans la console Firebase, cliquez sur l'icône Web "</>"**
+2. **Nommez votre app** (ex: "FocusManager Web")
+3. **Cochez "Also set up Firebase Hosting"** (optionnel)
+4. **Cliquez "Register app"**
+5. **Copiez la configuration qui apparaît**
+
+### Étape 5 : Configurer l'application
+
+1. **Ouvrez le fichier `firebase-config.js`**
+2. **Remplacez les valeurs par celles de votre projet :**
+
+```javascript
+const firebaseConfig = {
+    apiKey: "votre-api-key",
+    authDomain: "votre-projet.firebaseapp.com",
+    projectId: "votre-projet-id",
+    storageBucket: "votre-projet.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "votre-app-id"
+};
+```
+
+3. **Sauvegardez le fichier**
+
 ## 🚀 Déploiement sur GitHub Pages
 
 ### Méthode 1 : Via l'interface GitHub (Recommandée)
@@ -48,7 +106,12 @@ Une application web moderne de gestion de tâches avec timer Pomodoro pour optim
 2. **Uploader les fichiers**
    ```
    - Cliquez sur "uploading an existing file"
-   - Glissez-déposez les fichiers : index.html, style.css, script.js
+   - Glissez-déposez TOUS les fichiers : 
+     * index.html
+     * style.css
+     * script.js
+     * firebase-config.js (avec votre configuration)
+     * README.md
    - Ajoutez un message de commit : "Initial commit - FocusManager app"
    - Cliquez "Commit changes"
    ```
@@ -95,15 +158,65 @@ focusmanager/
 ├── index.html          # Page principale de l'application
 ├── style.css           # Styles CSS modernes et responsive
 ├── script.js           # Logique JavaScript complète
+├── firebase-config.js  # Configuration Firebase
 └── README.md           # Documentation (ce fichier)
 ```
+
+## 👤 Utilisation du Système de Compte
+
+### Première Utilisation
+
+1. **Ouvrez l'application** dans votre navigateur
+2. **Modal de connexion** s'affiche automatiquement
+3. **Trois options disponibles :**
+   - 🔐 **Se connecter** (si vous avez déjà un compte)
+   - 📝 **Créer un compte** (nouvel utilisateur)
+   - 💾 **Continuer hors ligne** (sans synchronisation)
+
+### Créer un Compte
+
+1. **Cliquez sur "Créer un compte"**
+2. **Saisissez votre email** et **mot de passe** (min. 6 caractères)
+3. **Cliquez "Créer un compte"**
+4. **Votre compte est créé** et vous êtes automatiquement connecté
+5. **Vos données seront synchronisées** sur tous vos appareils
+
+### Se Connecter
+
+1. **Saisissez votre email et mot de passe**
+2. **Cliquez "Se connecter"**
+3. **Vos tâches et statistiques** se synchronisent automatiquement
+4. **Indicateur de synchronisation** visible en haut à droite
+
+### Mode Hors Ligne
+
+- **Cliquez "Continuer hors ligne"** pour utiliser sans compte
+- **Données stockées localement** dans votre navigateur
+- **Pas de synchronisation** entre appareils
+- **Possibilité de créer un compte** plus tard
+
+### Synchronisation Automatique
+
+- **Sauvegarde en temps réel** de toutes vos actions
+- **Indicateur visuel** de l'état de synchronisation :
+  - 🟢 **Synchronisé** : Données à jour
+  - 🟡 **Synchronisation...** : Sauvegarde en cours
+  - 🔴 **Erreur** : Problème de connexion
+
+### Déconnexion
+
+- **Cliquez sur le bouton "Déconnexion"** en haut à droite
+- **Retour au modal de connexion**
+- **Données locales conservées** jusqu'à la prochaine connexion
 
 ## 🛠️ Technologies Utilisées
 
 - **HTML5** : Structure sémantique et accessible
 - **CSS3** : Design moderne avec variables CSS, Grid, Flexbox
 - **JavaScript ES6+** : Logique applicative avec modules et classes
-- **LocalStorage** : Persistance des données côté client
+- **Firebase** : Authentification et base de données cloud
+- **Firestore** : Base de données NoSQL en temps réel
+- **LocalStorage** : Persistance des données côté client (mode hors ligne)
 - **Web Notifications API** : Notifications natives du navigateur
 - **Google Fonts** : Typographie moderne (Inter)
 
