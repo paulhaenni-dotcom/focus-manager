@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusManager - Gestionnaire de Productivité</title>
+    <meta name="description" content="Application de gestion de tâches avec timer Pomodoro pour améliorer votre productivité">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>FocusManager 🧠</h1>
+        <p class="subtitle">Votre assistant de productivité personnel</p>
+    </header>
+
+    <main>
+        <!-- Zone de messages -->
+        <div id="message" class="message hidden"></div>
+
+        <!-- Section Nouvelle tâche -->
+        <section class="card task-form">
+            <h2>📝 Nouvelle tâche</h2>
+            <form id="taskForm" class="form-grid">
+                <div class="input-group">
+                    <label for="taskName">Nom de la tâche</label>
+                    <input 
+                        type="text" 
+                        id="taskName" 
+                        placeholder="Ex: Faire devoir de maths"
+                        maxlength="100"
+                        required
+                    >
+                </div>
+                <div class="input-group">
+                    <label for="taskDate">Date d'échéance</label>
+                    <input type="date" id="taskDate" required>
+                </div>
+                <div class="input-group">
+                    <label for="taskPriority">Priorité</label>
+                    <select id="taskPriority">
+                        <option value="low">🟢 Faible</option>
+                        <option value="medium" selected>🟡 Moyenne</option>
+                        <option value="high">🔴 Élevée</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        ➕ Ajouter la tâche
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Section Liste des tâches -->
+        <section class="card">
+            <div class="section-header">
+                <h2>📋 Mes tâches</h2>
+                <div class="task-controls">
+                    <button id="clearAllBtn" class="btn btn-secondary btn-small">
+                        🗑️ Tout supprimer
+                    </button>
+                    <select id="filterTasks" class="filter-select">
+                        <option value="all">Toutes les tâches</option>
+                        <option value="pending">En cours</option>
+                        <option value="completed">Terminées</option>
+                        <option value="overdue">En retard</option>
+                    </select>
+                </div>
+            </div>
+            <div id="taskList" class="task-list">
+                <div class="empty-state">
+                    <p>🎯 Aucune tâche pour le moment</p>
+                    <p class="empty-subtitle">Ajoutez votre première tâche ci-dessus !</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Timer Pomodoro -->
+        <section class="card pomodoro-section">
+            <h2>🍅 Timer Pomodoro</h2>
+            <div class="pomodoro-container">
+                <div class="timer-display">
+                    <div id="timer" class="timer-text">25:00</div>
+                    <div class="timer-label">minutes restantes</div>
+                </div>
+                <div class="pomodoro-controls">
+                    <button id="startBtn" class="btn btn-success">
+                        ▶️ Démarrer
+                    </button>
+                    <button id="pauseBtn" class="btn btn-warning" disabled>
+                        ⏸️ Pause
+                    </button>
+                    <button id="stopBtn" class="btn btn-danger" disabled>
+                        ⏹️ Arrêter
+                    </button>
+                </div>
+                <div class="pomodoro-settings">
+                    <label for="pomodoroTime">Durée (minutes):</label>
+                    <select id="pomodoroTime">
+                        <option value="15">15 min</option>
+                        <option value="25" selected>25 min</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Statistiques -->
+        <section class="card stats-section">
+            <h2>📊 Statistiques</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="todayTime">0</div>
+                    <div class="stat-label">Minutes aujourd'hui</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="completedTasks">0</div>
+                    <div class="stat-label">Tâches terminées</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalSessions">0</div>
+                    <div class="stat-label">Sessions Pomodoro</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="productivity">0%</div>
+                    <div class="stat-label">Productivité</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 FocusManager - Optimisez votre productivité</p>
+    </footer>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
