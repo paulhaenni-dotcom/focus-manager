@@ -1,7 +1,10 @@
 /**
  * FocusManager - Application de gestion de tâches avec timer Pomodoro
- * Version améliorée avec gestion d'erreurs et fonctionnalités avancées
+ * Version avec authentification Firebase et synchronisation cloud
  */
+
+// Configuration Firebase (chargée depuis firebase-config.js)
+// La configuration sera disponible via window.firebaseConfig
 
 // Configuration et variables globales
 const CONFIG = {
@@ -20,6 +23,12 @@ const CONFIG = {
     }
 };
 
+// Variables Firebase
+let db = null;
+let auth = null;
+let currentUser = null;
+let isOnlineMode = false;
+
 // État de l'application
 let appState = {
     tasks: [],
@@ -36,6 +45,24 @@ let appState = {
 
 // Éléments DOM
 const elements = {
+    // Auth elements
+    authModal: null,
+    authForm: null,
+    authEmail: null,
+    authPassword: null,
+    authSubmitBtn: null,
+    authToggleBtn: null,
+    authTitle: null,
+    authMessage: null,
+    offlineModeBtn: null,
+    userInfo: null,
+    userEmail: null,
+    logoutBtn: null,
+    syncStatus: null,
+    syncText: null,
+    appContent: null,
+    
+    // App elements
     taskForm: null,
     taskName: null,
     taskDate: null,
@@ -56,6 +83,329 @@ const elements = {
         productivity: null
     }
 };
+
+/**
+ * Initialisation Firebase
+ */
+function initializeFirebase() {
+    try {
+        // Vérifier si la configuration Firebase est disponible
+        if (!window.firebaseConfig) {
+            console.warn('Configuration Firebase non trouvée');
+            return false;
+        }
+        
+        // Initialiser Firebase
+        firebase.initializeApp(window.firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        
+        console.log('Firebase initialisé avec succès');
+        return true;
+    } catch (error) {
+        console.error('Erreur d\'initialisation Firebase:', error);
+        showAuthMessage('Erreur de connexion au service cloud', 'error');
+        return false;
+    }
+}
+
+/**
+ * Gestion de l'authentification
+ */
+const AuthManager = {
+    isLoginMode: true,
+
+    init() {
+        this.bindEvents();
+        this.checkAuthState();
+    },
+
+    bindEvents() {
+        if (elements.authForm) {
+            elements.authForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleAuth();
+            });
+        }
+
+        if (elements.authToggleBtn) {
+            elements.authToggleBtn.addEventListener('click', () => {
+                this.toggleMode();
+            });
+        }
+
+        if (elements.offlineModeBtn) {
+            elements.offlineModeBtn.addEventListener('click', () => {
+                this.enterOfflineMode();
+            });
+        }
+
+        if (elements.logoutBtn) {
+            elements.logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
+    },
+
+    async handleAuth() {
+        const email = elements.authEmail.value.trim();
+        const password = elements.authPassword.value;
+
+        if (!email || !password) {
+            showAuthMessage('Veuillez remplir tous les champs', 'error');
+            return;
+        }
+
+        if (password.length < 6) {
+            showAuthMessage('Le mot de passe doit contenir au moins 6 caractères', 'error');
+            return;
+        }
+
+        elements.authSubmitBtn.disabled = true;
+        elements.authSubmitBtn.textContent = this.isLoginMode ? 'Connexion...' : 'Création...';
+
+        try {
+            if (this.isLoginMode) {
+                await auth.signInWithEmailAndPassword(email, password);
+                showAuthMessage('Connexion réussie !', 'success');
+            } else {
+                await auth.createUserWithEmailAndPassword(email, password);
+                showAuthMessage('Compte créé avec succès !', 'success');
+            }
+        } catch (error) {
+            console.error('Erreur d\'authentification:', error);
+            this.handleAuthError(error);
+        } finally {
+            elements.authSubmitBtn.disabled = false;
+            elements.authSubmitBtn.textContent = this.isLoginMode ? 'Se connecter' : 'Créer un compte';
+        }
+    },
+
+    handleAuthError(error) {
+        let message = 'Erreur d\'authentification';
+        
+        switch (error.code) {
+            case 'auth/user-not-found':
+                message = 'Aucun compte trouvé avec cet email';
+                break;
+            case 'auth/wrong-password':
+                message = 'Mot de passe incorrect';
+                break;
+            case 'auth/email-already-in-use':
+                message = 'Un compte existe déjà avec cet email';
+                break;
+            case 'auth/weak-password':
+                message = 'Le mot de passe est trop faible';
+                break;
+            case 'auth/invalid-email':
+                message = 'Email invalide';
+                break;
+            case 'auth/network-request-failed':
+                message = 'Erreur de connexion réseau';
+                break;
+            default:
+                message = error.message || 'Erreur inconnue';
+        }
+        
+        showAuthMessage(message, 'error');
+    },
+
+    toggleMode() {
+        this.isLoginMode = !this.isLoginMode;
+        
+        if (this.isLoginMode) {
+            elements.authTitle.textContent = '🔐 Connexion';
+            elements.authSubmitBtn.textContent = 'Se connecter';
+            elements.authToggleBtn.textContent = 'Créer un compte';
+        } else {
+            elements.authTitle.textContent = '📝 Inscription';
+            elements.authSubmitBtn.textContent = 'Créer un compte';
+            elements.authToggleBtn.textContent = 'Se connecter';
+        }
+        
+        // Clear form
+        elements.authForm.reset();
+        hideAuthMessage();
+    },
+
+    checkAuthState() {
+        if (!auth) return;
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                this.onUserSignedIn(user);
+            } else {
+                this.onUserSignedOut();
+            }
+        });
+    },
+
+    async onUserSignedIn(user) {
+        currentUser = user;
+        isOnlineMode = true;
+        
+        // Masquer le modal d'auth
+        if (elements.authModal) {
+            elements.authModal.style.display = 'none';
+        }
+        
+        // Afficher l'app
+        if (elements.appContent) {
+            elements.appContent.style.display = 'block';
+        }
+        
+        // Afficher les infos utilisateur
+        if (elements.userInfo && elements.userEmail) {
+            elements.userInfo.style.display = 'block';
+            elements.userEmail.textContent = user.email;
+        }
+        
+        // Synchroniser les données
+        await this.syncUserData();
+        
+        console.log('Utilisateur connecté:', user.email);
+    },
+
+    onUserSignedOut() {
+        currentUser = null;
+        isOnlineMode = false;
+        
+        // Afficher le modal d'auth
+        if (elements.authModal) {
+            elements.authModal.style.display = 'flex';
+        }
+        
+        // Masquer l'app
+        if (elements.appContent) {
+            elements.appContent.style.display = 'none';
+        }
+        
+        // Masquer les infos utilisateur
+        if (elements.userInfo) {
+            elements.userInfo.style.display = 'none';
+        }
+        
+        console.log('Utilisateur déconnecté');
+    },
+
+    async syncUserData() {
+        if (!currentUser || !db) return;
+
+        try {
+            this.updateSyncStatus('syncing', 'Synchronisation...');
+            
+            // Récupérer les données du cloud
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            
+            if (userDoc.exists) {
+                const cloudData = userDoc.data();
+                
+                // Fusionner avec les données locales
+                if (cloudData.tasks) {
+                    appState.tasks = cloudData.tasks;
+                }
+                if (cloudData.stats) {
+                    appState.workedToday = cloudData.stats.workedToday || 0;
+                    appState.totalSessions = cloudData.stats.totalSessions || 0;
+                    appState.completedTasks = cloudData.stats.completedTasks || 0;
+                }
+                
+                // Mettre à jour l'affichage
+                TaskManager.displayTasks();
+                PomodoroTimer.updateStats();
+            }
+            
+            this.updateSyncStatus('synced', 'Synchronisé');
+        } catch (error) {
+            console.error('Erreur de synchronisation:', error);
+            this.updateSyncStatus('error', 'Erreur sync');
+        }
+    },
+
+    async saveToCloud() {
+        if (!currentUser || !db) return;
+
+        try {
+            this.updateSyncStatus('syncing', 'Sauvegarde...');
+            
+            const userData = {
+                tasks: appState.tasks,
+                stats: {
+                    workedToday: appState.workedToday,
+                    totalSessions: appState.totalSessions,
+                    completedTasks: appState.completedTasks,
+                    lastDate: appState.lastDate
+                },
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            await db.collection('users').doc(currentUser.uid).set(userData, { merge: true });
+            
+            this.updateSyncStatus('synced', 'Synchronisé');
+        } catch (error) {
+            console.error('Erreur de sauvegarde:', error);
+            this.updateSyncStatus('error', 'Erreur sync');
+        }
+    },
+
+    updateSyncStatus(status, text) {
+        if (!elements.syncStatus || !elements.syncText) return;
+        
+        const dot = elements.syncStatus.querySelector('.sync-dot');
+        if (dot) {
+            dot.className = `sync-dot ${status}`;
+        }
+        
+        elements.syncText.textContent = text;
+    },
+
+    enterOfflineMode() {
+        isOnlineMode = false;
+        
+        // Masquer le modal d'auth
+        if (elements.authModal) {
+            elements.authModal.style.display = 'none';
+        }
+        
+        // Afficher l'app
+        if (elements.appContent) {
+            elements.appContent.style.display = 'block';
+        }
+        
+        showMessage('Mode hors ligne activé. Vos données seront stockées localement.', 'success');
+    },
+
+    async logout() {
+        try {
+            await auth.signOut();
+            showMessage('Déconnexion réussie', 'success');
+        } catch (error) {
+            console.error('Erreur de déconnexion:', error);
+            showMessage('Erreur lors de la déconnexion', 'error');
+        }
+    }
+};
+
+/**
+ * Gestion des messages d'authentification
+ */
+function showAuthMessage(text, type = 'success', duration = 3000) {
+    if (!elements.authMessage) return;
+    
+    elements.authMessage.textContent = text;
+    elements.authMessage.className = `message ${type}`;
+    elements.authMessage.classList.remove('hidden');
+    
+    setTimeout(() => {
+        hideAuthMessage();
+    }, duration);
+}
+
+function hideAuthMessage() {
+    if (elements.authMessage) {
+        elements.authMessage.classList.add('hidden');
+    }
+}
 
 /**
  * Utilitaires pour le localStorage avec gestion d'erreurs
@@ -169,10 +519,16 @@ const TaskManager = {
     },
 
     saveTasks() {
-        if (Storage.set(CONFIG.STORAGE_KEYS.TASKS, appState.tasks)) {
-            this.displayTasks();
-            this.updateStats();
+        // Sauvegarder localement
+        Storage.set(CONFIG.STORAGE_KEYS.TASKS, appState.tasks);
+        
+        // Sauvegarder dans le cloud si connecté
+        if (isOnlineMode && currentUser) {
+            AuthManager.saveToCloud();
         }
+        
+        this.displayTasks();
+        this.updateStats();
     },
 
     addTask(name, date, priority = 'medium') {
@@ -560,6 +916,23 @@ function requestNotificationPermission() {
  * Initialisation des éléments DOM
  */
 function initializeElements() {
+    // Éléments d'authentification
+    elements.authModal = document.getElementById('authModal');
+    elements.authForm = document.getElementById('authForm');
+    elements.authEmail = document.getElementById('authEmail');
+    elements.authPassword = document.getElementById('authPassword');
+    elements.authSubmitBtn = document.getElementById('authSubmitBtn');
+    elements.authToggleBtn = document.getElementById('authToggleBtn');
+    elements.authTitle = document.getElementById('authTitle');
+    elements.authMessage = document.getElementById('authMessage');
+    elements.offlineModeBtn = document.getElementById('offlineModeBtn');
+    elements.userInfo = document.getElementById('userInfo');
+    elements.userEmail = document.getElementById('userEmail');
+    elements.logoutBtn = document.getElementById('logoutBtn');
+    elements.syncStatus = document.getElementById('syncStatus');
+    elements.syncText = document.getElementById('syncText');
+    elements.appContent = document.getElementById('appContent');
+    
     // Formulaire et champs
     elements.taskForm = document.getElementById('taskForm');
     elements.taskName = document.getElementById('taskName');
@@ -589,8 +962,8 @@ function initializeElements() {
 
     // Vérification des éléments critiques
     const criticalElements = [
-        'taskForm', 'taskName', 'taskDate', 'taskList', 'timer', 
-        'startBtn', 'pauseBtn', 'stopBtn'
+        'authModal', 'authForm', 'appContent', 'taskForm', 'taskName', 
+        'taskDate', 'taskList', 'timer', 'startBtn', 'pauseBtn', 'stopBtn'
     ];
     
     const missingElements = criticalElements.filter(key => !elements[key]);
@@ -704,7 +1077,24 @@ function initializeApp() {
         // Initialisation des éléments DOM
         initializeElements();
         
-        // Chargement des données
+        // Initialisation de Firebase
+        const firebaseInitialized = initializeFirebase();
+        
+        if (firebaseInitialized) {
+            // Initialiser l'authentification
+            AuthManager.init();
+        } else {
+            // Mode hors ligne par défaut si Firebase échoue
+            console.warn('Firebase non disponible, passage en mode hors ligne');
+            if (elements.authModal) {
+                elements.authModal.style.display = 'none';
+            }
+            if (elements.appContent) {
+                elements.appContent.style.display = 'block';
+            }
+        }
+        
+        // Chargement des données locales
         loadData();
         
         // Initialisation des événements
@@ -724,8 +1114,12 @@ function initializeApp() {
         // Demander la permission pour les notifications
         requestNotificationPermission();
         
-        // Vérifier les rappels après un délai
-        setTimeout(checkReminders, 2000);
+        // Vérifier les rappels après un délai (seulement si l'app est visible)
+        setTimeout(() => {
+            if (elements.appContent && elements.appContent.style.display !== 'none') {
+                checkReminders();
+            }
+        }, 2000);
         
         console.log('FocusManager initialisé avec succès');
         
