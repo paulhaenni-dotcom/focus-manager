@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FocusManager - Gestionnaire de Productivité</title>
     <meta name="description" content="Application de gestion de tâches avec timer Pomodoro pour améliorer votre productivité">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-ios16-dark.css">
+    <link rel="stylesheet" href="style-auth.css" media="(prefers-color-scheme: light)">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,6 +21,29 @@
     <script src="firebase-config.js"></script>
 </head>
 <body>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <h1>FocusManager 🧠</h1>
+                <p class="subtitle">Votre assistant de productivité personnel</p>
+            </div>
+            <div class="header-right" id="userInfo" style="display: none;">
+                <div class="user-profile">
+                    <span id="userEmail" class="user-email"></span>
+                    <button id="logoutBtn" class="btn btn-small btn-secondary">
+                        🚪 Déconnexion
+                    </button>
+                </div>
+                <div class="sync-status">
+                    <span id="syncStatus" class="sync-indicator">
+                        <span class="sync-dot"></span>
+                        <span id="syncText">Synchronisé</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
     <!-- Modal de connexion/inscription -->
     <div id="authModal" class="auth-modal">
         <div class="auth-modal-content">
@@ -58,29 +82,6 @@
             </div>
         </div>
     </div>
-
-    <header>
-        <div class="header-content">
-            <div class="header-left">
-                <h1>FocusManager 🧠</h1>
-                <p class="subtitle">Votre assistant de productivité personnel</p>
-            </div>
-            <div class="header-right" id="userInfo" style="display: none;">
-                <div class="user-profile">
-                    <span id="userEmail" class="user-email"></span>
-                    <button id="logoutBtn" class="btn btn-small btn-secondary">
-                        🚪 Déconnexion
-                    </button>
-                </div>
-                <div class="sync-status">
-                    <span id="syncStatus" class="sync-indicator">
-                        <span class="sync-dot"></span>
-                        <span id="syncText">Synchronisé</span>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </header>
 
     <main id="appContent" style="display: none;">
         <!-- Zone de messages -->
