@@ -1,0 +1,281 @@
+/* iOS 16 Inspired Dark Mode Design for FocusManager */
+
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+:root {
+  --color-background: #1c1c1e;
+  --color-primary: #0a84ff;
+  --color-primary-hover: #0060df;
+  --color-secondary: #8e8e93;
+  --color-text-primary: #f2f2f7;
+  --color-text-secondary: #aeaeb2;
+  --color-text-placeholder: #636366;
+  --color-card-background: rgba(28, 28, 30, 0.8);
+  --color-shadow: rgba(0, 0, 0, 0.7);
+  --border-radius: 20px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 28px;
+  --spacing-xl: 40px;
+  --font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-weight: 600;
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.card {
+  background: var(--color-card-background);
+  backdrop-filter: blur(30px);
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 30px var(--color-shadow);
+  padding: var(--spacing-lg);
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: var(--spacing-lg);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 15px 40px rgba(10, 10, 10, 0.8);
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  background: rgba(44, 44, 46, 0.6);
+  color: var(--color-text-primary);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  transition: background 0.3s ease;
+  font-weight: 400;
+  font-family: var(--font-family);
+}
+
+input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  background: rgba(44, 44, 46, 0.9);
+  box-shadow: 0 0 0 3px var(--color-primary);
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+button {
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  box-shadow: 0 5px 15px rgba(10, 132, 255, 0.6);
+  color: white;
+  background: var(--color-primary);
+  user-select: none;
+}
+
+button:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.8);
+}
+
+button:disabled,
+button[disabled] {
+  background: #555555;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task-item {
+  background: rgba(44, 44, 46, 0.7);
+  border-radius: 16px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 5px 15px var(--color-shadow);
+  transition: background 0.3s ease;
+}
+
+.task-item.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.task-name {
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+}
+
+.task-meta {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.task-actions button {
+  margin-left: var(--spacing-xs);
+  background: transparent;
+  color: var(--color-primary);
+  box-shadow: none;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.task-actions button:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.pomodoro-section {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pomodoro-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.session-type {
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.session-count {
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.timer-display {
+  background: var(--color-primary);
+  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 30px var(--color-shadow);
+  color: white;
+  font-weight: 700;
+  font-size: 3rem;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  user-select: none;
+  transition: background 0.3s ease;
+}
+
+.timer-label {
+  font-weight: 400;
+  font-size: 1rem;
+  margin-top: 8px;
+  color: var(--color-text-secondary);
+}
+
+.pomodoro-controls {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.pomodoro-controls button {
+  width: 100px;
+}
+
+.pomodoro-settings {
+  margin-top: var(--spacing-md);
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  font-size: 0.9rem;
+}
+
+.custom-time {
+  display: none;
+  margin-top: var(--spacing-sm);
+}
+
+.auto-cycle {
+  margin-top: var(--spacing-md);
+  display: flex;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.auto-cycle label {
+  cursor: pointer;
+  user-select: none;
+  color: var(--color-text-secondary);
+}
+
+footer {
+  margin-top: var(--spacing-xl);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  user-select: none;
+}
