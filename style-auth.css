@@ -1,0 +1,137 @@
+/* Apple Inspired Clean and Elegant Login Page Styles - Light Theme */
+
+.auth-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 60px 20px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+.auth-modal-content {
+  background: #fff;
+  border-radius: 40px;
+  padding: 60px 50px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1d1d1f;
+}
+
+.auth-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.auth-header h2 {
+  font-weight: 800;
+  font-size: 3rem;
+  color: #1d1d1f;
+  margin-bottom: 12px;
+}
+
+.auth-subtitle {
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: #3c3c4399;
+  letter-spacing: 0.02em;
+}
+
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.input-group label {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #3c3c4399;
+  margin-bottom: 12px;
+}
+
+.input-group input {
+  padding: 18px 24px;
+  font-size: 1.3rem;
+  border-radius: 32px;
+  background: #f2f2f7;
+  color: #1d1d1f;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.input-group input::placeholder {
+  color: #8e8e93;
+  opacity: 0.7;
+}
+
+.input-group input:focus {
+  outline: none;
+  box-shadow: 0 0 0 5px #007aff;
+}
+
+.auth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  margin-top: 40px;
+  width: 100%;
+}
+
+.auth-buttons button {
+  padding: 20px 0;
+  font-size: 1.5rem;
+  border-radius: 40px;
+  box-shadow: 0 20px 60px rgba(0, 122, 255, 0.3);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+  font-weight: 800;
+  width: 100%;
+  background: #007aff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-buttons button:hover {
+  background: #0051a8;
+  box-shadow: 0 26px 80px rgba(0, 81, 168, 0.5);
+  transform: translateY(-5px);
+}
+
+.auth-footer {
+  margin-top: 40px;
+  width: 100%;
+  text-align: center;
+}
+
+.auth-footer button {
+  padding: 18px 0;
+  font-size: 1.3rem;
+  border-radius: 40px;
+  box-shadow: none;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 700;
+  background: transparent;
+  color: #007aff;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-footer button:hover {
+  background: #e5f0ff;
+  color: #0051a8;
+}
