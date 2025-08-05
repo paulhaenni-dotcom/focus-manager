@@ -1,0 +1,73 @@
+/* iOS 16 Inspired Design for FocusManager */
+
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+:root {
+  --color-background: #f2f2f7;
+  --color-primary: #007aff;
+  --color-primary-hover: #0051a8;
+  --color-secondary: #8e8e93;
+  --color-text-primary: #1c1c1e;
+  --color-text-secondary: #3a3a3c;
+  --color-text-placeholder: #aeaeb2;
+  --color-card-background: rgba(255, 255, 255, 0.8);
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --border-radius: 20px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 28px;
+  --spacing-xl: 40px;
+  --font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-weight: 600;
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.card {
+  background: var(--color-card-background);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 30px var(--color-shadow);
+  padding: var(--spacing-lg);
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: var(--spacing-lg);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ... (rest of the styles as previously provided) ... */
