@@ -26,8 +26,10 @@ const CONFIG = {
 // Variables Firebase
 let db = null;
 let auth = null;
+let messaging = null;
 let currentUser = null;
 let isOnlineMode = false;
+let notificationToken = null;
 
 // État de l'application
 let appState = {
@@ -100,6 +102,14 @@ function initializeFirebase() {
         auth = firebase.auth();
         db = firebase.firestore();
         
+        // Initialiser Firebase Messaging si supporté
+        if ('serviceWorker' in navigator && 'Notification' in window) {
+            messaging = firebase.messaging();
+            initializeNotifications();
+        } else {
+            console.warn('Notifications push non supportées sur ce navigateur');
+        }
+        
         console.log('Firebase initialisé avec succès');
         return true;
     } catch (error) {
@@ -107,6 +117,168 @@ function initializeFirebase() {
         showAuthMessage('Erreur de connexion au service cloud', 'error');
         return false;
     }
+}
+
+/**
+ * Initialisation des notifications push
+ */
+async function initializeNotifications() {
+    try {
+        // Enregistrer le service worker
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('Service Worker enregistré:', registration);
+        
+        // Configurer le service worker pour messaging
+        messaging.useServiceWorker(registration);
+        
+        // Demander la permission pour les notifications
+        await requestNotificationPermission();
+        
+        // Écouter les messages en premier plan
+        messaging.onMessage((payload) => {
+            console.log('Message reçu en premier plan:', payload);
+            showForegroundNotification(payload);
+        });
+        
+    } catch (error) {
+        console.error('Erreur d\'initialisation des notifications:', error);
+    }
+}
+
+/**
+ * Demander la permission pour les notifications push
+ */
+async function requestNotificationPermission() {
+    try {
+        // Demander la permission
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+            console.log('Permission de notification accordée');
+            
+            // Obtenir le token FCM
+            const token = await messaging.getToken({
+                vapidKey: 'v1DGNEh2LCZaWZCwm99Zz1ZU89wKp5mth94bfDtnYMk'
+            });
+            
+            if (token) {
+                notificationToken = token;
+                console.log('Token FCM obtenu:', token);
+                
+                // Sauvegarder le token pour l'utilisateur connecté
+                if (currentUser) {
+                    await saveNotificationToken(token);
+                }
+                
+                showMessage('Notifications push activées ! 🔔', 'success');
+            }
+        } else {
+            console.log('Permission de notification refusée');
+            showMessage('Notifications désactivées. Vous pouvez les activer dans les paramètres du navigateur.', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la demande de permission:', error);
+    }
+}
+
+/**
+ * Sauvegarder le token de notification pour l'utilisateur
+ */
+async function saveNotificationToken(token) {
+    if (!currentUser || !db) return;
+    
+    try {
+        await db.collection('users').doc(currentUser.uid).update({
+            notificationToken: token,
+            lastTokenUpdate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Token de notification sauvegardé');
+    } catch (error) {
+        console.error('Erreur de sauvegarde du token:', error);
+    }
+}
+
+/**
+ * Afficher une notification en premier plan
+ */
+function showForegroundNotification(payload) {
+    const title = payload.notification?.title || 'FocusManager';
+    const body = payload.notification?.body || 'Nouvelle notification';
+    
+    // Afficher une notification native si possible
+    if (Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: body,
+            icon: '/icon-192x192.png',
+            badge: '/badge-72x72.png',
+            tag: 'focusmanager-foreground'
+        });
+        
+        notification.onclick = () => {
+            window.focus();
+            notification.close();
+        };
+        
+        // Fermer automatiquement après 5 secondes
+        setTimeout(() => notification.close(), 5000);
+    }
+    
+    // Afficher aussi un message dans l'interface
+    showMessage(`🔔 ${title}: ${body}`, 'success', 5000);
+}
+
+/**
+ * Programmer une notification pour une tâche
+ */
+async function scheduleTaskNotification(task) {
+    if (!messaging || !notificationToken) return;
+    
+    const taskDate = new Date(task.date);
+    const now = new Date();
+    
+    // Programmer pour le jour même à 9h si la tâche est pour aujourd'hui ou plus tard
+    if (taskDate >= now) {
+        const notificationTime = new Date(taskDate);
+        notificationTime.setHours(9, 0, 0, 0);
+        
+        // Si c'est pour aujourd'hui et qu'il est déjà plus de 9h, programmer pour dans 1 heure
+        if (notificationTime <= now) {
+            notificationTime.setTime(now.getTime() + 60 * 60 * 1000); // +1 heure
+        }
+        
+        console.log(`Notification programmée pour ${task.name} le ${notificationTime.toLocaleString()}`);
+        
+        // Note: Pour une vraie application, vous devriez utiliser Firebase Functions
+        // pour programmer les notifications côté serveur
+    }
+}
+
+/**
+ * Envoyer une notification de fin de Pomodoro
+ */
+function sendPomodoroNotification(minutes) {
+    if (!messaging) {
+        // Fallback vers notification native
+        if (Notification.permission === 'granted') {
+            new Notification('🍅 Pomodoro terminé !', {
+                body: `Session de ${minutes} minutes terminée. Prenez une pause !`,
+                icon: '/icon-192x192.png',
+                badge: '/badge-72x72.png',
+                tag: 'pomodoro-complete',
+                requireInteraction: true
+            });
+        }
+        return;
+    }
+    
+    // Ici, dans une vraie application, vous enverriez la notification via votre serveur
+    // Pour la démo, on utilise la notification locale
+    showForegroundNotification({
+        notification: {
+            title: '🍅 Pomodoro terminé !',
+            body: `Session de ${minutes} minutes terminée. Prenez une pause bien méritée !`
+        }
+    });
 }
 
 /**
@@ -262,6 +434,11 @@ const AuthManager = {
         
         // Synchroniser les données
         await this.syncUserData();
+        
+        // Sauvegarder le token de notification si disponible
+        if (notificationToken) {
+            await saveNotificationToken(notificationToken);
+        }
         
         console.log('Utilisateur connecté:', user.email);
     },
@@ -560,6 +737,10 @@ const TaskManager = {
 
         appState.tasks.push(task);
         this.saveTasks();
+        
+        // Programmer une notification pour cette tâche
+        scheduleTaskNotification(task);
+        
         showMessage('Tâche ajoutée avec succès !', 'success');
         return true;
     },
@@ -786,8 +967,8 @@ const PomodoroTimer = {
         this.updateDisplay();
         this.updateButtons();
 
-        // Notification
-        this.showCompletionNotification(completedMinutes);
+        // Notification push
+        sendPomodoroNotification(completedMinutes);
         
         // Incrémenter les sessions
         appState.totalSessions++;
@@ -797,17 +978,9 @@ const PomodoroTimer = {
     },
 
     showCompletionNotification(minutes) {
-        // Notification native si supportée
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('🍅 Pomodoro terminé !', {
-                body: `Vous avez travaillé ${minutes} minutes. Prenez une pause !`,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>'
-            });
-        }
-        
-        // Alerte de fallback
-        alert(`🍅 Pomodoro terminé !\n\nVous avez travaillé ${minutes} minutes.\nPrenez une pause bien méritée !`);
-        showMessage(`Session de ${minutes} minutes terminée ! 🎉`, 'success', 5000);
+        // Cette fonction est maintenant remplacée par sendPomodoroNotification
+        // Gardée pour compatibilité
+        sendPomodoroNotification(minutes);
     },
 
     updateDisplay() {
