@@ -90,6 +90,47 @@ const firebaseConfig = {
 
 3. **Sauvegardez le fichier**
 
+## 🔔 Configuration des Notifications Push (Optionnel)
+
+### Étape 1 : Activer Cloud Messaging dans Firebase
+
+1. **Dans la console Firebase, allez dans "Cloud Messaging"**
+2. **Cliquez sur "Get started"**
+3. **✅ Clé VAPID déjà configurée** : L'application utilise déjà votre clé VAPID
+
+### Étape 2 : Tester les notifications
+
+1. **Ouvrez votre application**
+2. **Acceptez les permissions de notification**
+3. **Démarrez un timer Pomodoro**
+4. **Vous recevrez une notification à la fin !**
+
+### Types de notifications disponibles
+
+- **🍅 Fin de session Pomodoro** : Notification automatique
+- **📅 Rappels de tâches** : Notifications programmées
+- **🔔 Notifications en temps réel** : Même quand l'app est fermée
+
+### Notifications sur mobile
+
+Pour recevoir des notifications sur votre téléphone :
+
+1. **Ouvrez l'app dans Chrome/Safari mobile**
+2. **Acceptez les permissions de notification**
+3. **Ajoutez l'app à l'écran d'accueil** (PWA)
+4. **Les notifications fonctionneront même app fermée !**
+
+### Dépannage notifications
+
+**Notifications ne fonctionnent pas ?**
+- Vérifiez les permissions dans les paramètres du navigateur
+- Assurez-vous que l'app est en HTTPS (GitHub Pages utilise HTTPS)
+- Testez sur Chrome/Firefox (meilleur support)
+
+**Sur mobile :**
+- Activez les notifications dans les paramètres du téléphone
+- Ajoutez l'app à l'écran d'accueil pour un meilleur support
+
 ## 🚀 Déploiement sur GitHub Pages
 
 ### Méthode 1 : Via l'interface GitHub (Recommandée)
@@ -111,6 +152,7 @@ const firebaseConfig = {
      * style.css
      * script.js
      * firebase-config.js (avec votre configuration)
+     * firebase-messaging-sw.js (pour les notifications push)
      * README.md
    - Ajoutez un message de commit : "Initial commit - FocusManager app"
    - Cliquez "Commit changes"
@@ -155,11 +197,12 @@ git push origin main
 
 ```
 focusmanager/
-├── index.html          # Page principale de l'application
-├── style.css           # Styles CSS modernes et responsive
-├── script.js           # Logique JavaScript complète
-├── firebase-config.js  # Configuration Firebase
-└── README.md           # Documentation (ce fichier)
+├── index.html              # Page principale de l'application
+├── style.css               # Styles CSS modernes et responsive
+├── script.js               # Logique JavaScript complète
+├── firebase-config.js      # Configuration Firebase
+├── firebase-messaging-sw.js # Service Worker pour notifications push
+└── README.md               # Documentation (ce fichier)
 ```
 
 ## 👤 Utilisation du Système de Compte
@@ -216,6 +259,8 @@ focusmanager/
 - **JavaScript ES6+** : Logique applicative avec modules et classes
 - **Firebase** : Authentification et base de données cloud
 - **Firestore** : Base de données NoSQL en temps réel
+- **Firebase Cloud Messaging (FCM)** : Notifications push en temps réel
+- **Service Workers** : Notifications en arrière-plan
 - **LocalStorage** : Persistance des données côté client (mode hors ligne)
 - **Web Notifications API** : Notifications natives du navigateur
 - **Google Fonts** : Typographie moderne (Inter)
