@@ -105,6 +105,10 @@
                     <input type="date" id="taskDate" required>
                 </div>
                 <div class="input-group">
+                    <label for="taskTime">Heure d'échéance (optionnel)</label>
+                    <input type="time" id="taskTime" placeholder="Ex: 14:30">
+                </div>
+                <div class="input-group">
                     <label for="taskPriority">Priorité</label>
                     <select id="taskPriority">
                         <option value="low">🟢 Faible</option>
@@ -147,6 +151,12 @@
         <!-- Section Timer Pomodoro -->
         <section class="card pomodoro-section">
             <h2>🍅 Timer Pomodoro</h2>
+            <div class="pomodoro-info">
+                <div class="session-info">
+                    <span id="sessionType" class="session-type">Session de travail</span>
+                    <span id="sessionCount" class="session-count">Session 1/4</span>
+                </div>
+            </div>
             <div class="pomodoro-container">
                 <div class="timer-display">
                     <div id="timer" class="timer-text">25:00</div>
@@ -164,13 +174,29 @@
                     </button>
                 </div>
                 <div class="pomodoro-settings">
-                    <label for="pomodoroTime">Durée (minutes):</label>
-                    <select id="pomodoroTime">
+                    <label for="pomodoroMode">Mode Pomodoro :</label>
+                    <select id="pomodoroMode">
+                        <option value="work" selected>🍅 Travail (25 min)</option>
+                        <option value="shortBreak">☕ Pause courte (5 min)</option>
+                        <option value="longBreak">🛋️ Pause longue (20 min)</option>
+                        <option value="custom">⚙️ Personnalisé</option>
+                    </select>
+                </div>
+                <div class="custom-time" id="customTimeDiv" style="display: none;">
+                    <label for="customTime">Durée personnalisée :</label>
+                    <select id="customTime">
+                        <option value="10">10 min</option>
                         <option value="15">15 min</option>
-                        <option value="25" selected>25 min</option>
                         <option value="30">30 min</option>
                         <option value="45">45 min</option>
+                        <option value="60">60 min</option>
                     </select>
+                </div>
+                <div class="auto-cycle">
+                    <label>
+                        <input type="checkbox" id="autoCycle" checked>
+                        Cycle automatique (travail → pause → travail...)
+                    </label>
                 </div>
             </div>
         </section>
