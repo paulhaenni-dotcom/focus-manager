@@ -9,12 +9,18 @@
 // Configuration et variables globales
 const CONFIG = {
     DEFAULT_POMODORO_TIME: 25,
+    POMODORO_TIMES: {
+        work: 25,           // Session de travail - 25 minutes (technique officielle)
+        shortBreak: 5,      // Pause courte - 5 minutes (technique officielle)
+        longBreak: 20       // Pause longue - 20 minutes (technique officielle)
+    },
     STORAGE_KEYS: {
         TASKS: 'focusmanager_tasks',
         WORKED_TODAY: 'focusmanager_worked_today',
         LAST_DATE: 'focusmanager_last_date',
         TOTAL_SESSIONS: 'focusmanager_total_sessions',
-        COMPLETED_TASKS: 'focusmanager_completed_tasks'
+        COMPLETED_TASKS: 'focusmanager_completed_tasks',
+        POMODORO_SESSION: 'focusmanager_pomodoro_session'
     },
     PRIORITIES: {
         low: { label: '🟢 Faible', class: 'low-priority' },
@@ -42,7 +48,13 @@ let appState = {
     lastDate: '',
     totalSessions: 0,
     completedTasks: 0,
-    currentFilter: 'all'
+    currentFilter: 'all',
+    // Nouveau système Pomodoro
+    currentMode: 'work',        // 'work', 'shortBreak', 'longBreak', 'custom'
+    sessionCount: 1,            // Compteur de sessions (1-4)
+    completedPomodoros: 0,      // Nombre de pomodoros terminés dans le cycle
+    autoCycle: true,            // Cycle automatique activé
+    isBreakTime: false          // Indique si on est en pause
 };
 
 // Éléments DOM
@@ -68,6 +80,7 @@ const elements = {
     taskForm: null,
     taskName: null,
     taskDate: null,
+    taskTime: null,
     taskPriority: null,
     taskList: null,
     message: null,
@@ -75,7 +88,12 @@ const elements = {
     startBtn: null,
     pauseBtn: null,
     stopBtn: null,
-    pomodoroTime: null,
+    pomodoroMode: null,
+    customTime: null,
+    customTimeDiv: null,
+    autoCycle: null,
+    sessionType: null,
+    sessionCount: null,
     clearAllBtn: null,
     filterTasks: null,
     stats: {
@@ -708,7 +726,7 @@ const TaskManager = {
         this.updateStats();
     },
 
-    addTask(name, date, priority = 'medium') {
+    addTask(name, date, time = null, priority = 'medium') {
         // Validation
         if (!Validator.isValidTaskName(name)) {
             showMessage('Le nom de la tâche est requis (max 100 caractères)', 'error');
@@ -730,6 +748,7 @@ const TaskManager = {
             id: Date.now(),
             name: name.trim(),
             date: date,
+            time: time || null,
             priority: priority,
             done: false,
             createdAt: new Date().toISOString()
@@ -852,7 +871,14 @@ const TaskManager = {
 
     createTaskHTML(task) {
         const priorityConfig = CONFIG.PRIORITIES[task.priority];
-        const isOverdue = !task.done && Formatter.isOverdue(task.date);
+        const isOverdue = !task.done && Formatter.isOverdue(task.date, task.time);
+        
+        // Formatage de la date et heure
+        let dateTimeText = `📅 ${task.date}`;
+        if (task.time) {
+            dateTimeText += ` à ${task.time}`;
+        }
+        dateTimeText += ` (${Formatter.formatDate(task.date, task.time)})`;
         
         return `
             <div class="task-item ${task.done ? 'completed' : ''} ${priorityConfig.class}" data-id="${task.id}">
@@ -862,7 +888,7 @@ const TaskManager = {
                         <div class="task-meta">
                             <span class="task-priority">${priorityConfig.label}</span>
                             <span class="task-date ${isOverdue ? 'overdue' : ''}">
-                                📅 ${task.date} (${Formatter.formatDate(task.date)})
+                                ${dateTimeText}
                             </span>
                         </div>
                     </div>
@@ -897,13 +923,13 @@ const PomodoroTimer = {
 
         appState.isRunning = true;
         appState.isPaused = false;
-        
+
         this.updateButtons();
-        
+
         appState.timer = setInterval(() => {
             appState.pomodoroTime--;
             this.updateDisplay();
-            
+
             if (appState.pomodoroTime <= 0) {
                 this.complete();
             }
@@ -921,7 +947,7 @@ const PomodoroTimer = {
             appState.timer = setInterval(() => {
                 appState.pomodoroTime--;
                 this.updateDisplay();
-                
+
                 if (appState.pomodoroTime <= 0) {
                     this.complete();
                 }
@@ -933,7 +959,7 @@ const PomodoroTimer = {
             clearInterval(appState.timer);
             showMessage('Timer mis en pause', 'success');
         }
-        
+
         this.updateButtons();
     },
 
@@ -944,10 +970,25 @@ const PomodoroTimer = {
         appState.timer = null;
         appState.isRunning = false;
         appState.isPaused = false;
-        
-        const selectedTime = parseInt(elements.pomodoroTime.value);
-        appState.pomodoroTime = selectedTime * 60;
-        
+
+        // Reset du timer selon le mode actuel
+        let resetTime = CONFIG.POMODORO_TIMES.work;
+        switch (appState.currentMode) {
+            case 'work':
+                resetTime = CONFIG.POMODORO_TIMES.work;
+                break;
+            case 'shortBreak':
+                resetTime = CONFIG.POMODORO_TIMES.shortBreak;
+                break;
+            case 'longBreak':
+                resetTime = CONFIG.POMODORO_TIMES.longBreak;
+                break;
+            case 'custom':
+                resetTime = parseInt(elements.customTime.value) || CONFIG.POMODORO_TIMES.work;
+                break;
+        }
+        appState.pomodoroTime = resetTime * 60;
+
         this.updateDisplay();
         this.updateButtons();
         showMessage('Timer arrêté', 'success');
@@ -959,21 +1000,67 @@ const PomodoroTimer = {
         appState.isRunning = false;
         appState.isPaused = false;
 
-        const completedMinutes = parseInt(elements.pomodoroTime.value);
+        const completedMinutes = Math.floor((CONFIG.POMODORO_TIMES[appState.currentMode] || CONFIG.DEFAULT_POMODORO_TIME) * 60 / 60);
         this.trackTime(completedMinutes);
-        
-        // Reset du timer
-        appState.pomodoroTime = completedMinutes * 60;
+
+        // Gestion du cycle automatique
+        if (appState.autoCycle) {
+            if (appState.currentMode === 'work') {
+                appState.completedPomodoros++;
+                if (appState.completedPomodoros % 4 === 0) {
+                    appState.currentMode = 'longBreak';
+                } else {
+                    appState.currentMode = 'shortBreak';
+                }
+            } else {
+                appState.currentMode = 'work';
+            }
+        }
+
+        // Reset du timer selon le mode actuel
+        let resetTime = CONFIG.POMODORO_TIMES.work;
+        switch (appState.currentMode) {
+            case 'work':
+                resetTime = CONFIG.POMODORO_TIMES.work;
+                break;
+            case 'shortBreak':
+                resetTime = CONFIG.POMODORO_TIMES.shortBreak;
+                break;
+            case 'longBreak':
+                resetTime = CONFIG.POMODORO_TIMES.longBreak;
+                break;
+            case 'custom':
+                resetTime = parseInt(elements.customTime.value) || CONFIG.POMODORO_TIMES.work;
+                break;
+        }
+        appState.pomodoroTime = resetTime * 60;
+
+        // Mise à jour de l'affichage du type de session et compteur
+        if (elements.sessionType) {
+            const modeLabels = {
+                work: 'Session de travail',
+                shortBreak: 'Pause courte',
+                longBreak: 'Pause longue',
+                custom: 'Session personnalisée'
+            };
+            elements.sessionType.textContent = modeLabels[appState.currentMode] || 'Session';
+        }
+        if (elements.sessionCount) {
+            elements.sessionCount.textContent = `Session ${appState.completedPomodoros % 4 + 1}/4`;
+        }
+
         this.updateDisplay();
         this.updateButtons();
 
         // Notification push
         sendPomodoroNotification(completedMinutes);
-        
-        // Incrémenter les sessions
-        appState.totalSessions++;
-        Storage.set(CONFIG.STORAGE_KEYS.TOTAL_SESSIONS, appState.totalSessions);
-        
+
+        // Incrémenter les sessions si c'était une session de travail
+        if (appState.currentMode === 'work') {
+            appState.totalSessions++;
+            Storage.set(CONFIG.STORAGE_KEYS.TOTAL_SESSIONS, appState.totalSessions);
+        }
+
         this.updateStats();
     },
 
@@ -1157,12 +1244,16 @@ function initializeEvents() {
             
             const name = elements.taskName.value;
             const date = elements.taskDate.value;
+            const time = elements.taskTime ? elements.taskTime.value : null;
             const priority = elements.taskPriority.value;
             
-            if (TaskManager.addTask(name, date, priority)) {
+            if (TaskManager.addTask(name, date, time, priority)) {
                 elements.taskForm.reset();
                 // Définir la date par défaut à aujourd'hui
                 elements.taskDate.value = new Date().toISOString().split('T')[0];
+                if (elements.taskTime) {
+                    elements.taskTime.value = '';
+                }
             }
         });
     }
@@ -1180,9 +1271,34 @@ function initializeEvents() {
         elements.stopBtn.addEventListener('click', () => PomodoroTimer.stop());
     }
 
-    // Changement de durée du timer
-    if (elements.pomodoroTime) {
-        elements.pomodoroTime.addEventListener('change', () => PomodoroTimer.changeTime());
+    // Changement de mode Pomodoro
+    if (elements.pomodoroMode) {
+        elements.pomodoroMode.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            appState.currentMode = mode;
+            if (mode === 'custom') {
+                if (elements.customTimeDiv) elements.customTimeDiv.style.display = 'flex';
+            } else {
+                if (elements.customTimeDiv) elements.customTimeDiv.style.display = 'none';
+            }
+            PomodoroTimer.stop();
+        });
+    }
+
+    // Changement de durée personnalisée
+    if (elements.customTime) {
+        elements.customTime.addEventListener('change', (e) => {
+            if (appState.currentMode === 'custom') {
+                PomodoroTimer.stop();
+            }
+        });
+    }
+
+    // Cycle automatique
+    if (elements.autoCycle) {
+        elements.autoCycle.addEventListener('change', (e) => {
+            appState.autoCycle = e.target.checked;
+        });
     }
 
     // Bouton supprimer tout
